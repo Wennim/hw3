@@ -17,7 +17,7 @@
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
-
+#include "mbed_rpc.h"
 
 uLCD_4DGL uLCD(D1, D0, D2); // serial tx, serial rx, reset pin;
 //DigitalOut myled(LED1);
@@ -27,7 +27,6 @@ Thread thread;
 InterruptIn mypin_select(USER_BUTTON);
 Config config;
 void ulcd_display(int i){
-
 if(i==1){
 
 // basic printf demo = 16 by 18 characters on screen
@@ -142,7 +141,7 @@ else if(i==4){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ulcd_display_selected(int i){
 uLCD.cls();
-if(i==1){
+if(i==30){
 
     uLCD.text_width(2.5); //4X size text
     uLCD.text_height(2.5);
@@ -152,7 +151,7 @@ if(i==1){
 
 }
 
-else if(i ==2){
+else if(i ==45){
 
     uLCD.text_width(2.5); //4X size text
     uLCD.text_height(2.5);
@@ -162,7 +161,7 @@ else if(i ==2){
 
 }
 
-else if(i==3){
+else if(i==60){
 
     uLCD.text_width(2.5); //4X size text
     uLCD.text_height(2.5);
@@ -173,7 +172,7 @@ else if(i==3){
     
 }
 
-else if(i==4){
+else if(i==80){
     uLCD.text_width(2.5); //4X size text
     uLCD.text_height(2.5);
     uLCD.locate(0,3);
@@ -341,12 +340,13 @@ int gesture() {
 int selected;
 int option;
 
-void detection(){
-
+void detection(Arguments *in, Reply *out){
+int x = in->getArg<double>();
 double angle_radian;
 double angle;
 
- ulcd_display_selected(option);
+myled3=1;
+ ulcd_display_selected(x);
   while (1)
   {
     BSP_ACCELERO_AccGetXYZ(DataXYZ);
@@ -360,34 +360,41 @@ double angle;
 
   printf("%lf degree\n",angle);
   
-  if(angle>=selected)
-    myled3=1;
+  if(angle>=x){
+    myled3=0;
 
+  }
+    
   else 
-  myled3=0;
+  myled3=1;
   ThisThread::sleep_for(800ms);
   }
   
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int stop;
-
-void stop_condition(){
-
-  stop=1;
-
+void gesture_UI(Arguments *in, Reply *out){
+  thread.start(selecting);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void selecting(Arguments *in, Reply *out){
-   x = in->getArg<double>();
-   int start =x;
+int stop;
+void stop_condition(Arguments *in, Reply *out){
+  
+  int x = in->getArg<double>();
+  stop=x;
+  printf("stop_condition is %d!",stop);
+ 
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void selecting(){
+  uLCD.cls();
    BSP_ACCELERO_Init();
   thread.start(callback(&queue, &EventQueue::dispatch_forever));
   int select=1;
     int mypin;
-   while (start)
+   while (1)
     {    mypin=gesture();
 
         if (mypin==0)
@@ -399,7 +406,7 @@ void selecting(Arguments *in, Reply *out){
         if(select<1)
             select=4;
 
-        option=select;
+        //option=select;
         ulcd_display(select);
 
        if(select==2)
@@ -414,18 +421,14 @@ void selecting(Arguments *in, Reply *out){
         else if(select==4)
         selected=80;
 
-        
-
-        
-      
-       mypin_select.fall(queue.event(stop_condition));
+      printf("Now stop is %d\n",stop);
 
       if(stop==1)
         break;
       
    }
    
-  mypin_select.rise(queue.event(detection));
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,7 +459,7 @@ void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
     message_num++;
     MQTT::Message message;
     char buff[100];
-    sprintf(buff, "Selected angle is %d", selected);
+    sprintf(buff, "%d", selected);
     message.qos = MQTT::QOS0;
     message.retained = false;
     message.dup = false;
