@@ -7,8 +7,9 @@ BufferedSerial pc(USBTX, USBRX);
 using namespace std::chrono;
 
 Thread t; 
-void selecting();
-RPCFunction rpcSelecting(&selecting, "selecting");
+RPCFunction rpcGesture_UI(&gesture_UI, "gesture_UI");
+RPCFunction rpcDetection(&detection, "detection");
+RPCFunction rpcStop_condition(&stop_condition, "stop_condition");
 int main() {
 
         t.start(wifi_mqtt);
@@ -34,7 +35,6 @@ int main() {
         RPC::call(buf, outbuf);
         printf("%s\r\n", outbuf);
     }
-   // selecting();
     
  
     
