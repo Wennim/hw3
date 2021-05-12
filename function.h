@@ -1,16 +1,18 @@
 #include "mbed.h"
-
+#include "mbed_rpc.h"
 
 
 void ulcd_display(int i);
 
 int gesture(); 
 
-void detection();
+void detection(Arguments *in, Reply *out);
 
-void selecting(Arguments *in, Reply *out);
+void selecting();
 
-void stop_condition();
+void stop_condition(Arguments *in, Reply *out);
+
+void gesture_UI(Arguments *in, Reply *out);
 
 void ulcd_display_selected(int i);
 
