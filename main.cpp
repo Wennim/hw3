@@ -4,18 +4,13 @@
 
 using namespace std::chrono;
 
+Thread t; 
 
+int main() {
 
-
-
-
-void data_xyz();
-
-int main()
- {
-    
+        t.start(wifi_mqtt);
     selecting();
     
+ 
     
 }
-
