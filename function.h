@@ -13,3 +13,5 @@ void selecting();
 void stop_condition();
 
 void ulcd_display_selected(int i);
+
+int wifi_mqtt();
