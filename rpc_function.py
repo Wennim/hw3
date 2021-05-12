@@ -10,12 +10,18 @@ line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC repl
 print(line)
 time.sleep(1)
 
-s.write(bytes("/Selecting/run 1\r", 'UTF-8'))
+s.write(bytes("/selecting/run 1 1\r", 'UTF-8'))
 line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
 print(line)
 line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
 print(line)
-time.sleep(1)
+time.sleep(30)
 
+s.write(bytes("/selecting/run 0 0\r", 'UTF-8'))
+line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
+print(line)
+line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
+print(line)
+time.sleep(30)
 
 s.close()
