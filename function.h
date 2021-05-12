@@ -8,7 +8,7 @@ int gesture();
 
 void detection();
 
-void selecting();
+void selecting(Arguments *in, Reply *out);
 
 void stop_condition();
 
