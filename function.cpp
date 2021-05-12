@@ -139,7 +139,7 @@ else if(i==4){
     uLCD.printf("    80"); //Default Green on black text
 }
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ulcd_display_selected(int i){
 uLCD.cls();
 if(i==1){
@@ -181,7 +181,7 @@ else if(i==4){
     uLCD.printf("    80"); //Default Green on black text
 }
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Create an area of memory to use for input, output, and intermediate arrays.
 // The size of this will depend on the model you're using, and may need to be
 // determined by experimentation.
@@ -337,7 +337,7 @@ int gesture() {
   }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int selected;
 int option;
 
@@ -370,7 +370,7 @@ double angle;
   
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int stop;
 
 void stop_condition(){
@@ -378,15 +378,16 @@ void stop_condition(){
   stop=1;
 
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-void selecting(){
-  
+void selecting(Arguments *in, Reply *out){
+   x = in->getArg<double>();
+   int start =x;
    BSP_ACCELERO_Init();
   thread.start(callback(&queue, &EventQueue::dispatch_forever));
   int select=1;
     int mypin;
-   while (1)
+   while (start)
     {    mypin=gesture();
 
         if (mypin==0)
@@ -427,7 +428,7 @@ void selecting(){
   mypin_select.rise(queue.event(detection));
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
 WiFiInterface *wifi;
 volatile int message_num = 0;
