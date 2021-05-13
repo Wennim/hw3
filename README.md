@@ -1,0 +1,14 @@
+# hw3
+
+這些檔案裏，主要的是main.cpp、function.cpp、function.h和mqtt_client.py。其他檔案就是source code。
+
+在main.cpp裏，主要是宣告了三個rpc funtion，有gesture UI、detection和讓gesture UI停止的stop condition，還有讓wifi_mqtt以thread進行。其餘的funtion都在funtion.cpp裏實現。
+
+mqtt_client.py裏面包括了rpc的呼叫和mqtt client讀取資料。當執行mqtt_client.py，開始的rpc指令是讓gesture_UI執行還有將stop_condition設成0。gesture UI下開始執行selecting的動作，
+我以config.h裏面所表示的label num，然後在gesture下return 屬於那個動作的值，用那個值判斷往下選擇還是往上選擇，這樣可以以手勢控制選項了。
+
+當我按下USER_BUTTON后，mqtt就會publish 我先所選的角度，在mqtt_client.py就會讀取和解讀，解讀到所選的角度后就會再寫入兩個rpc的指令，分別是停止gesture UI的stop_condition和要開始的detection。
+
+進入detection后，uLCD就會顯示我所選的角度，然後LED是顯示藍燈。那就可以開始測量傾斜角度，測量的同時，mqtt會持續publish我目前的傾斜角度值，當判別到已經超過臨界角度了LED就會變橘燈，
+detection就會停止，mqtt就會publish 說現在角度已經超過臨界角，當mqtt_client.py讀取和解讀到超過的訊息后，就會再呼叫gesture UI的rpc指令，回到gesture UI再繼續選擇臨界角。
+
