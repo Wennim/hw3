@@ -3,7 +3,7 @@ import time
 import serial
 
 
-serdev = '/dev/ttyACM1'
+serdev = '/dev/ttyACM0'
 s = serial.Serial(serdev, 9600)
 
 # https://os.mbed.com/teams/mqtt/wiki/Using-MQTT#python-client
@@ -13,21 +13,14 @@ mqttc = paho.Client()
 
 # Settings for connection
 # TODO: revise host to your IP
-host = "192.168.0.36"
+host = "192.168.0.32"
 topic = "Mbed"
 
 
 s.write(bytes("/stop_condition/run 0 0\r", 'UTF-8'))
-line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-print(line)
-line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-print(line)
 
 s.write(bytes("/gesture_UI/run\r", 'UTF-8'))
-line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-print(line)
-line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-print(line)
+
 
 
 
@@ -36,79 +29,57 @@ def on_connect(self, mosq, obj, rc):
     print("Connected rc: " + str(rc))
 
 def on_message(mosq, obj, msg):
-    #print("[Received] Topic: " + msg.topic + ", Message: " + str(msg.payload) + "\n");
-    split=str(msg.payload).split("'")
-    command=str(split[1]).split("\\",2)
-    print(command[0])
-    if(command[0]=="30"):
+    #print(str(msg.payload));
+    split=str(msg.payload).split("\\")
+    command=str(split[0]).split(" ")
+    print(split[0])
+    if(command[2]=="30"):
         s.write(bytes("/stop_condition/run 1 1\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
         time.sleep(1)
 
-        print("It is working")
         s.write(bytes("/detection/run 30 30\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+        
 
         
 
         
         
-    elif(command[0]=="45"):
+    elif(command[2]=="45"):
         s.write(bytes("/stop_condition/run 1 1\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+    
         time.sleep(1)
 
-        print("It is working")
+        
         s.write(bytes("/detection/run 45 45\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+       
 
         
         
 
-    elif(command[0]=="60"):
+    elif(command[2]=="60"):
         s.write(bytes("/stop_condition/run 1 1\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+        
         time.sleep(1)
 
-        print("It is working")
+        
         s.write(bytes("/detection/run 60 60\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+        
 
         
         
 
-    elif(command[0]=="80"):
+    elif(command[2]=="80"):
         s.write(bytes("/stop_condition/run 1 1\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
         time.sleep(1)
 
-        print("It is working")
+        
         s.write(bytes("/detection/run 80 80\r", 'UTF-8'))
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (putc())
-        print(line)
-        line=s.readline() # Read an echo string from mbed terminated with '\n' (RPC reply)
-        print(line)
+
+    elif(command[1]=="threshold"):
+        print("Returning to gesture UI")
+        s.write(bytes("/stop_condition/run 0 0\r", 'UTF-8'))
+
+        s.write(bytes("/gesture_UI/run\r", 'UTF-8'))
 
         
         
@@ -134,7 +105,7 @@ num = 0
 while num != 5:
     ret = mqttc.publish(topic, "Message from Python!\n", qos=0)
     if (ret[0] != 0):
-            print("Publish failed")
+             print("Publish failed")
     mqttc.loop()
     time.sleep(1.5)
     num += 1
