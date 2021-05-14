@@ -26,6 +26,7 @@ EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread thread;
 InterruptIn mypin_select(USER_BUTTON);
 Config config;
+
 void ulcd_display(int i){
 if(i==1){
 
@@ -338,35 +339,37 @@ int gesture() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int selected;
-int option;
+double angle;
+int over;
+int break_condition;
 
 void detection(Arguments *in, Reply *out){
 int x = in->getArg<double>();
 double angle_radian;
-double angle;
+
 
 myled3=1;
  ulcd_display_selected(x);
   while (1)
   {
     BSP_ACCELERO_AccGetXYZ(DataXYZ);
-  //printf("%d, %d, %d\n", DataXYZ[0], DataXYZ[1], DataXYZ[2]);
-
-
 
   angle_radian=acos ( DataXYZ[2]/ sqrt( pow(DataXYZ[0],2) + pow(DataXYZ[1],2) + pow(DataXYZ[2],2) ));
 
   angle=angle_radian*180/3.14159265;
-
-  printf("%lf degree\n",angle);
   
   if(angle>=x){
     myled3=0;
-
+    over =1 ;
+    uLCD.cls();
+    ThisThread::sleep_for(1000ms);
+    break;
   }
     
-  else 
+  else{
   myled3=1;
+  } 
+  
   ThisThread::sleep_for(800ms);
   }
   
@@ -391,7 +394,6 @@ void stop_condition(Arguments *in, Reply *out){
 void selecting(){
   uLCD.cls();
    BSP_ACCELERO_Init();
-  thread.start(callback(&queue, &EventQueue::dispatch_forever));
   int select=1;
     int mypin;
    while (1)
@@ -406,7 +408,6 @@ void selecting(){
         if(select<1)
             select=4;
 
-        //option=select;
         ulcd_display(select);
 
        if(select==2)
@@ -420,8 +421,6 @@ void selecting(){
 
         else if(select==4)
         selected=80;
-
-      printf("Now stop is %d\n",stop);
 
       if(stop==1)
         break;
@@ -456,10 +455,13 @@ void messageArrived(MQTT::MessageData& md) {
 }
 
 void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
+  over=0;
+  break_condition=0;
+
     message_num++;
     MQTT::Message message;
     char buff[100];
-    sprintf(buff, "%d", selected);
+    sprintf(buff, "Angle is %d", selected);
     message.qos = MQTT::QOS0;
     message.retained = false;
     message.dup = false;
@@ -469,6 +471,31 @@ void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
 
     printf("rc:  %d\r\n", rc);
     printf("Puslish message: %s\r\n", buff);
+
+    while(!break_condition){
+      message_num++;
+    MQTT::Message message;
+    char buff[100];
+    if(over==1){
+      sprintf(buff, "Over threshold agle");
+      break_condition=1;
+    }
+      else{
+        sprintf(buff, "Now angle is %lf", angle);
+        break_condition=0;
+      }
+      
+      ThisThread::sleep_for(1s);
+    message.qos = MQTT::QOS0;
+    message.retained = false;
+    message.dup = false;
+    message.payload = (void*) buff;
+    message.payloadlen = strlen(buff) + 1;
+    int rc = client->publish(topic, message);
+
+    printf("rc:  %d\r\n", rc);
+    printf("Puslish message: %s\r\n", buff);
+    }
 }
 
 void close_mqtt() {
@@ -496,7 +523,7 @@ int wifi_mqtt(){
     MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
 
     //TODO: revise host to your IP
-    const char* host = "192.168.0.36";
+    const char* host = "192.168.0.32";
     printf("Connecting to TCP network...\r\n");
 
     SocketAddress sockAddr;
@@ -525,7 +552,7 @@ int wifi_mqtt(){
 
     mqtt_thread.start(callback(&mqtt_queue, &EventQueue::dispatch_forever));
     mypin_select.rise(mqtt_queue.event(&publish_message, &client));
-    //btn3.rise(&close_mqtt);
+    
 
     int num = 0;
     while (num != 5) {
